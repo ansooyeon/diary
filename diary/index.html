@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenCode Mood Tracker</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; background: #f9f9f9; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        button { padding: 10px; margin-right: 5px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px; background: #fff; }
+        button.active { background: #007bff; color: white; border-color: #007bff; }
+        input[type="text"] { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        .submit-btn { background: #28a745; color: white; width: 100%; border: none; }
+        .log-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+    </style>
+</head>
+<body>
+    <h2>😀 Opencode Mood Tracker v1.0</h2>
+    <div class="card">
+        <h3>오늘의 기분은?</h3>
+        <div id="mood-options">
+            <button onclick="selectMood(5)">😀 5점</button>
+            <button onclick="selectMood(4)">🙂 4점</button>
+            <button onclick="selectMood(3)">😐 3점</button>
+            <button onclick="selectMood(2)">🙁 2점</button>
+            <button onclick="selectMood(1)">😢 1점</button>
+        </div>
+        <input type="text" id="note" placeholder="한 줄 일기를 작성하세요.">
+        <button class="submit-btn" onclick="saveLog()">오늘의 기분 기록하기</button>
+    </div>
+    <div class="card">
+        <h3>이번 주 평균 행복 지수: <span id="avg-score">0.0</span> / 5.0</h3>
+        <div id="logs-list"></div>
+    </div>
+    <script>
+        let selectedMood = 0;
+        function selectMood(score) {
+            selectedMood = score;
+            const buttons = document.querySelectorAll('#mood-options button');
+            buttons.forEach((btn, idx) => {
+                btn.className = (5 - idx === score) ? 'active' : '';
+            });
+        }
+        function saveLog() {
+            const note = document.getElementById('note').value;
+            if(!selectedMood) return alert('기분 점수를 선택해주세요!');
+            const log = { date: new Date().toLocaleDateString(), mood: selectedMood, note: note };
+            let logs = JSON.parse(localStorage.getItem('mood_logs') || '[]');
+            logs.unshift(log);
+            localStorage.setItem('mood_logs', JSON.stringify(logs));
+            document.getElementById('note').value = '';
+            selectedMood = 0;
+            selectMood(0);
+            loadLogs();
+        }
+        function loadLogs() {
+            let logs = JSON.parse(localStorage.getItem('mood_logs') || '[]');
+            const listDiv = document.getElementById('logs-list');
+            listDiv.innerHTML = logs.map(l => `<div class="log-item"><b>${l.date}</b> | 기분: ${l.mood}점 - ${l.note}</div>`).join('');
+            if(logs.length > 0) {
+                const sum = logs.reduce((acc, curr) => acc + curr.mood, 0);
+                document.getElementById('avg-score').textContent = (sum / logs.length).toFixed(1);
+            }
+        }
+        window.onload = loadLogs;
+    </script>
+</body>
+</html>
